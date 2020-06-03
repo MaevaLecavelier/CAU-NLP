@@ -10,24 +10,37 @@ header = {
 limit = 10 # Determine the number of mangas
 
 def main():
-	responses = getResponses()
-	db = getDataBase(responses)
+    responses = getResponses()
+    db = getDataBase(responses)
+    dbToFile(db)
 	# db[0]["title"] -> title of the first manga
 	# Work for title, synopsis, rank, tomes,
 	# categories (string[]) and comments (string[])
 
+def dbToFile(db):
+    res = "";
+    for elem in db:
+        res += "{"
+        for key, value in elem.items():
+            res += "$"+key+"->"+str(value)
+        res += "}\n"
+    f = open("database.txt","w")
+    f.write(res)
+    f.close()
+
 def getDataBase(responses):
-	db = []
-	for data in responses:
-		x = {}
-		x["title"] = data["attributes"]["canonicalTitle"]
-		x["synopsis"] = data["attributes"]["synopsis"]
-		x["rank"] = data["attributes"]["popularityRank"]
-		x["rating"] = data["attributes"]["averageRating"]
-		x["tomes"] = data["attributes"]["chapterCount"]
-		x["categories"] = getCategories(data["id"])
-		x["comments"] = getComments(data["id"])
-		db.append(x)
+    db = []
+    for data in responses:
+        x = {}
+        x["title"] = data["attributes"]["canonicalTitle"]
+        x["synopsis"] = data["attributes"]["synopsis"]
+        x["rank"] = data["attributes"]["popularityRank"]
+        x["rating"] = data["attributes"]["averageRating"]
+        x["tomes"] = data["attributes"]["chapterCount"]
+        x["categories"] = getCategories(data["id"])
+        x["comments"] = getComments(data["id"])
+        db.append(x)
+    return db
 
 def getResponses():
 	responses = []
