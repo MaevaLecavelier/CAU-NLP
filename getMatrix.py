@@ -1,8 +1,9 @@
-import pandas as pd
-from sklearn.feature_extraction.text import CountVectorizer
-import string
+import pandas as pd #to make the matrix
+from sklearn.feature_extraction.text import CountVectorizer #to make the matrix
+from gensim import corpora, models
+from nltk.stem import PorterStemmer
+import pickle #to save the matrix
 import re
-
 #if you try to run this code for the first time, use this:
 #import nltk
 #nltk.download('stopwords')
@@ -14,10 +15,20 @@ from nltk.tokenize import word_tokenize
 
 def main():
     global dicManSyn
+    global cleanSyn
+    print("Getting database...")
     db = getDB("database.txt")
+    print("Got database.")
+    print("Making usable data...")
     dicManSyn = mangaSynopsis(db)
+    print("Usable data made.")
+    print("Transforming data into matrix...")
     dtm = getDTMatrix(dicManSyn)
-    print(dtm)
+    print("Matrix created.")
+    dtm.to_pickle("dtm.pkl") #save matrix into pkl file
+    #print("Making the LDA...")
+    #doLDA(cleanSyn)
+    #print("LDA made.")
 
 
 #get content from file made by kitsuapi
@@ -38,10 +49,7 @@ def stringToList(str):
         for details in attributes[1:]:
             item = details.split("->")
             key = item[0]
-            if key == "tomes":
-                value = item[1][0:-2]
-            else:
-                value = item[1]
+            value = item[1]
             x[key] = value
         db.append(x)
     return db
@@ -49,22 +57,25 @@ def stringToList(str):
 #get a dict with key: title, value: synopsis
 def mangaSynopsis(database):
     data = {}
+    i= 0;
     for mangas in database:
-        data[mangas['title']] = mangas['synopsis']
+        if mangas['title'] not in data:
+            data[mangas['title']] = mangas['synopsis']
     return data
 
 
 #********************** get Document-Term matrix **************************#
 
 def getDTMatrix(dict):
+    global cleanSyn
     names = getIndex(dict)
     data = getData(dict)
     dataCleaned = cleanData(data)
+    cleanSyn = dataCleaned.copy()
     vec = CountVectorizer()
     X = vec.fit_transform(dataCleaned)
     df = pd.DataFrame(X.toarray(), index=names, columns=vec.get_feature_names())
     return df
-
 
     ##### parameters of the matrix #####
 #return an array with the title of each manga
@@ -100,8 +111,8 @@ def cleanData(list):
             allWords.append(filtered)
             if i == nb_round: #add words only at the final iteration, to have clean result.
                 for words in filtered:
-                    if removeDigit(words):
-                        str += words+" "
+                    if removeDigit(words) and len(words)>3:
+                        str += PorterStemmer().stem(words)+" "
                 clean.append(str)
         if i < nb_round: #update stopWord for each iteration except the last one
             removeCommonWords(allWords)
@@ -149,6 +160,20 @@ def removeCommonWords(listOfList):
 
 #******************* end clean data **************************************#
 
+#******** LDA ************#
+def doLDA(list):
+    list_of_list_of_tokens = []
+    for elem in list:
+        tmp = elem.split(" ")
+        list_of_list_of_tokens.append(tmp)
+    dictionary_LDA = corpora.Dictionary(list_of_list_of_tokens)
+    corpus = [dictionary_LDA.doc2bow(list_of_tokens) for list_of_tokens in list_of_list_of_tokens]
+    lda_model = models.LdaModel(corpus, num_topics=20,id2word=dictionary_LDA, passes=5)
+    for i, topic in lda_model.print_topics(-1):
+        print('topic: {} \nWords: {}'.format(i, topic))
+        print()
+
+
 
 #********************* init and global variables *************************#
 
@@ -158,10 +183,13 @@ def updateStopWord(listStopWords, listToAdd):
     for elem in listToAdd:
         if elem not in listStopWords:
             listStopWords.append(elem)
+    cv = CountVectorizer(stop_words=listStopWords)
+    pickle.dump(cv, open("cv_stop.pkl","wb")) #save stopWords
     return listStopWords
 
 stop = updateStopWord(stopwords.words('english'), toAdd )
 dicManSyn = {}
+cleanSyn = []
 #************************************************************************#
 
 if __name__ == "__main__":
