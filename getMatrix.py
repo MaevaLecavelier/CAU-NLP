@@ -16,20 +16,30 @@ from nltk.tokenize import word_tokenize
 def main():
     global dicManSyn
     global cleanSyn
+    global dataCleaned
     print("Getting database...")
     db = getDB("database.txt")
     print("Got database.")
     print("Making usable data...")
-    dicManSyn = mangaSynopsis(db)
+    print(len(db))
+    dicManSyn, cleanDB = mangaSynopsis(db)
+    dbToFile(cleanDB)
     print("Usable data made.")
-    print("Transforming data into matrix...")
-    dtm = getDTMatrix(dicManSyn)
-    print("Matrix created.")
-    dtm.to_pickle("dtm.pkl") #save matrix into pkl file
-    #print("Making the LDA...")
-    #doLDA(cleanSyn)
-    #print("LDA made.")
+    #print("Transforming data into matrix...")
+    #dtm = getDTMatrix(dicManSyn)
+    #print("Matrix created.")
+    #dtm.to_pickle("dtm.pkl") #save matrix into pkl file
 
+def dbToFile(db):
+    res = "";
+    for elem in db:
+        res += "{"
+        for key, value in elem.items():
+            res += "£"+key+"->"+str(value)
+        res += "}\n"
+    f = open("database.txt","w")
+    f.write(res)
+    f.close()
 
 #get content from file made by kitsuapi
 def getDB(file):
@@ -45,7 +55,7 @@ def stringToList(str):
     mangas = str.split("{")
     for manga in mangas[1:]:
         x = {}
-        attributes = manga.split("$")
+        attributes = manga.split("£")
         for details in attributes[1:]:
             item = details.split("->")
             key = item[0]
@@ -57,20 +67,24 @@ def stringToList(str):
 #get a dict with key: title, value: synopsis
 def mangaSynopsis(database):
     data = {}
-    i= 0;
+    cleandb = []
+    i = 0
     for mangas in database:
         if mangas['title'] not in data:
+            cleandb.append(mangas)
             data[mangas['title']] = mangas['synopsis']
-    return data
+    return data, cleandb
 
 
 #********************** get Document-Term matrix **************************#
 
 def getDTMatrix(dict):
     global cleanSyn
+    global dataCleaned
     names = getIndex(dict)
     data = getData(dict)
     dataCleaned = cleanData(data)
+    saveData(dataCleaned, "cleanData.txt")
     cleanSyn = dataCleaned.copy()
     vec = CountVectorizer()
     X = vec.fit_transform(dataCleaned)
@@ -173,7 +187,13 @@ def doLDA(list):
         print('topic: {} \nWords: {}'.format(i, topic))
         print()
 
-
+#************* save data to file **********************#
+def saveData(list, filename):
+    f = open(filename, 'w')
+    content = ""
+    for elem in list:
+        content += elem+"\n\n"
+    f.write(content)
 
 #********************* init and global variables *************************#
 
@@ -190,6 +210,7 @@ def updateStopWord(listStopWords, listToAdd):
 stop = updateStopWord(stopwords.words('english'), toAdd )
 dicManSyn = {}
 cleanSyn = []
+dataCleaned = []
 #************************************************************************#
 
 if __name__ == "__main__":

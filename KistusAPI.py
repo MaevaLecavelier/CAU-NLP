@@ -7,7 +7,7 @@ header = {
             'Accept': 'application/vnd.api+json',
             'Content-Type': 'application/vnd.api+json'
         }
-limit = 10 # Determine the number of mangas
+limit = 1000 # Determine the number of mangas
 
 def main():
     responses = getResponses()
@@ -22,7 +22,7 @@ def dbToFile(db):
     for elem in db:
         res += "{"
         for key, value in elem.items():
-            res += "$"+key+"->"+str(value)
+            res += "£"+key+"->"+str(value)
         res += "}\n"
     f = open("database.txt","w")
     f.write(res)

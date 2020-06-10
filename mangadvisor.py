@@ -4,9 +4,14 @@ import getResult
 def main():
     user = getUser()
     welcome(user)
-    request = getRequest()
-    handleRequest(request)
-
+    userPref = getResult.getUserPref(user)
+    try:
+        while True:
+            request = getRequest()
+            handleRequest(request, userPref)
+    except KeyboardInterrupt:
+        print("Thank you for using MangAdivsor! See you soon")
+        exit()
 
 
 def getUser():
@@ -25,25 +30,48 @@ def welcome(name):
     print("\t -'title' if you want to search by title.")
     print("\t -'category' if you want to search by category.")
     print("\t -'popularity' if you want to search by popularity.")
-    print("\t -'guided' if you want to discover new things...\n")
+    print("\t -'other' if you want to search by key words for example (ninja, ghoul...)")
+    print("\t -'guided' if you want to discover new things...")
+    print("\t - to leave enter CTR-C\n")
 
 def getRequest():
     request = input("What do you want?\n")
-    expected = ['title', 'category', 'popularity', 'guided']
+    expected = ['title', 'category', 'popularity', 'guided', 'other']
     while request not in expected:
         request = input("Bad input. Please try again:\n")
     return request
 
-def handleRequest(request):
+
+def handleRequest(request, pref):
     res = []
     if(request == 'title'):
-        print("search title")
+        title = input("Which title? \n")
+        res = getResult.searchByTitle(title)
+        print("\nresult: ")
+        getResult.printTitleManga(res)
+
     if(request == 'category'):
-        print("search category")
+        category = input("Which category? \n")
+        res = getResult.searchByCategory(category, pref)
+        print("\nresult: ")
+        getResult.printTitleManga(res)
+
     if(request == 'popularity'):
         res = getResult.searchByPopularity()
+        print("\nresult: ")
+        getResult.printTitleManga(res)
+
+    if(request == 'other'):
+        query = input("Enter a keyword: ")
+        res = getResult.searchByQuery(query)
+        print("\nresults:")
+        getResult.printTitleManga(res)
+
     if(request == 'guided'):
-        print("search guided")
+        res = getResult.searchGuided(pref)
+        print("\nresult: ")
+        getResult.printTitleManga(res)
+    print("\n\n")
     return res
 
 
