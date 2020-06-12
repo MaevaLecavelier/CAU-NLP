@@ -1,4 +1,7 @@
 import sys
+import subprocess
+import webbrowser
+import os
 import getResult
 
 def main():
@@ -8,7 +11,8 @@ def main():
     try:
         while True:
             request = getRequest()
-            handleRequest(request, userPref)
+            result = handleRequest(request, userPref)
+            createWebPage(result)
     except KeyboardInterrupt:
         print("Thank you for using MangAdivsor! See you soon")
         exit()
@@ -50,6 +54,7 @@ def handleRequest(request, pref):
         print("\nresult: ")
         getResult.printTitleManga(res)
 
+
     if(request == 'category'):
         category = input("Which category? \n")
         res = getResult.searchByCategory(category, pref)
@@ -74,7 +79,57 @@ def handleRequest(request, pref):
     print("\n\n")
     return res
 
+def createWebPage(results):
 
+    print("Building Web page...")
+    content = """
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    """
+
+    content += """
+        <table class="table table-striped table-dark">
+            <thead>
+                <b>
+                    <th text-align="center">Title</th>
+                    <th text-align="center">Synopsis</th>
+                    <th text-align="center">Rank</th>
+                    <th text-align="center">Rating</th>
+                    <th test-align="center">Likeness</th>
+                </b>
+            </thead>
+    """
+
+    for elem in results:
+        content += """
+            <tr>
+                <td>""" + elem["title"] + """</td>
+                <td>""" + elem["synopsis"] + """</td>
+                <td>""" + elem["rank"] + """</td>"""
+        if (float(elem["rating"]) > 70.0):
+            content += """<td><p class="text-success">""" + elem["rating"] + """</p></td>"""
+        elif (float(elem["rating"]) > 45.0):
+            content += """<td><p class="text-warning">""" + elem["rating"] + """</p></td>"""
+        else:
+            content += """<td><p class="text-danger">""" + elem["rating"] + """</p></td>"""
+        #try:
+        content += """<td> <div style="color:#ff7d91;text-align:center;"> """ + elem['score'] + """%</div></td>"""
+        #except:
+        #    pass
+        content += """</tr>"""
+    content += """</table> """
+
+    html_file = open('result.html',"w")
+    html_file.write(content)
+    html_file.close()
+
+    url = "result.html"
+
+    new = 2
+
+    webbrowser.open(url, new=new)
 
 if __name__ == "__main__":
 	main()

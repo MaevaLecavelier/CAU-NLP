@@ -6,6 +6,7 @@ def main():
     global db
     db = getDB("database.txt")
     res = searchByQuery("ghoul")
+    print(res)
     printTitleManga(res)
 
 
@@ -41,7 +42,9 @@ def searchByTitle(title):
         mangasDict.append(getDictByTitle(elem))
     additionalRes = getSimilar(mangasDict, db)
     for elem in additionalRes:
-        mangasDict.append(getDictByTitle(elem))
+        manga = getDictByTitle(elem)
+        manga['score'] = str(additionalRes.get(elem))
+        mangasDict.append(manga)
     return mangasDict
 
 
@@ -68,8 +71,11 @@ def searchByCategory(category, pref):
             res.append(manga)
     else:
         accurateRes = getSimilar(pref, tmp)
-    for mangas in accurateRes:
-        res.append(getDictByTitle(mangas))
+
+    for elem in accurateRes:
+        manga = getDictByTitle(elem)
+        manga['score'] = str(accurateRes.get(elem))
+        res.append(manga)
     return res
 
 
@@ -88,7 +94,9 @@ def searchGuided(pref):
     res = []
     resTmp = getSimilar(pref, db)
     for elem in resTmp:
-        res.append(getDictByTitle(elem))
+        manga = getDictByTitle(elem)
+        manga['score'] = str(resTmp.get(elem))
+        res.append(manga)
     return res
 
 
@@ -112,8 +120,10 @@ def searchByQuery(query):
         if score <= getMin:
             res.append(db[index])
     addRes = getSimilar(res, db)
-    for mangas in addRes:
-        res.append(getDictByTitle(mangas))
+    for elem in addRes:
+        manga = getDictByTitle(elem)
+        manga['score'] = str(addRes.get(elem))
+        res.append(manga)
     return res
 
 #***********************************************************************#
