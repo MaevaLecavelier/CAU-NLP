@@ -114,10 +114,10 @@ def createWebPage(results):
             content += """<td><p class="text-warning">""" + elem["rating"] + """</p></td>"""
         else:
             content += """<td><p class="text-danger">""" + elem["rating"] + """</p></td>"""
-        #try:
-        content += """<td> <div style="color:#ff7d91;text-align:center;"> """ + elem['score'] + """%</div></td>"""
-        #except:
-        #    pass
+        try:
+            content += """<td> <div style="color:#ff7d91;text-align:center;"> """ + elem['score'] + """%</div></td>"""
+        except:
+            pass
         content += """</tr>"""
     content += """</table> """
 
