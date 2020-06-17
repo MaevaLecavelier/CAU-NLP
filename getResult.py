@@ -5,9 +5,13 @@ import Levenshtein
 def main():
     global db
     db = getDB("database.txt")
-    res = searchByQuery("ghoul")
-    print(res)
-    printTitleManga(res)
+    #testing
+    #res = searchByQuery("ghoul")
+    #tmp = [db[9], db[6], db[48]]
+    #printTitleManga(tmp)
+    #res = getSimilar(tmp, db)
+    #print(res)
+    #printTitleManga(res)
 
 
 def getUserPref(user):
@@ -132,15 +136,18 @@ def searchByQuery(query):
 
 def getSimilar(listRef, listTest): #listRef: we want manga similar to them, listTest: the future similar manga are in this list
     restmp = {}
+    scoretmp = []
     modifiedDB = getModifiedDB(listRef, listTest)#= listTest without manga in the listRef
-    for ref in listRef:
-        for manga in modifiedDB:
+    for manga in modifiedDB:
+        for ref in listRef:
             score = 0
             score += getCategoryScore(ref, manga)
             score += getPopularityScore(manga)
             score += getLengthScore(ref, manga)
             score = round(score, 2)
-            restmp[manga['title']] = score
+            scoretmp.append(score)
+        restmp[manga['title']] = max(scoretmp)
+        scoretmp = []
     res = getBestElem(restmp)
     return res
 
